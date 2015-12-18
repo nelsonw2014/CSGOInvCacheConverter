@@ -132,6 +132,7 @@ class CSGOInvCacheConverterApplet(ttk.Frame):
 if __name__ == "__main__":
     root = tk.Tk()
     root.wm_title("CS:GO Inventory Cache Image Converter")
+    root.iconphoto(True, tk.PhotoImage(file="icon.png"))
     root.resizable(0, 0)
     app = CSGOInvCacheConverterApplet(master=root)
     app.mainloop()

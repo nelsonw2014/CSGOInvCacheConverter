@@ -3,7 +3,10 @@ from setuptools import setup, find_packages
 setup(
     name="CSGOInvCacheConverter",
     version="0.1",
-    packages=find_packages(),
+    packages=["cicc"],
+    package_data={
+        "": ["*.png"]
+    },
     install_requires=["Pillow>=3.0.0"],
 
     author="Warren Nelson",
