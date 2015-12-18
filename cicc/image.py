@@ -1,4 +1,4 @@
-from PIL import ImageFile
+from PIL import ImageFile, Image
 
 
 class CSGOInventoryCacheFile(ImageFile.ImageFile):
@@ -11,3 +11,15 @@ class CSGOInventoryCacheFile(ImageFile.ImageFile):
         self.tile = [
             ("raw", (0, 0) + self.size, 0, ("BGRA", 0, 1))
         ]
+
+
+def convert_cache_to_image(original_location: str, new_location: str):
+    Image.register_open("IIC", CSGOInventoryCacheFile)
+    Image.register_extension("IIC", ".iic")
+
+    try:
+        with open(original_location, "rb") as original_img:
+            img = Image.open(original_img)
+            img.save(new_location)
+    except FileNotFoundError as e:
+        raise FileNotFoundError("Originating file does not exist: ", e)
