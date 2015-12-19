@@ -13,7 +13,7 @@ class CSGOInventoryCacheFile(ImageFile.ImageFile):
         ]
 
 
-def convert_cache_to_image(original_location: str, new_location: str):
+def convert_cache_to_image(original_location, new_location):
     Image.register_open("IIC", CSGOInventoryCacheFile)
     Image.register_extension("IIC", ".iic")
 
@@ -21,5 +21,5 @@ def convert_cache_to_image(original_location: str, new_location: str):
         with open(original_location, "rb") as original_img:
             img = Image.open(original_img)
             img.save(new_location)
-    except FileNotFoundError as e:
-        raise FileNotFoundError("Originating file does not exist: ", e)
+    except Exception as e:
+        raise Exception("Originating file does not exist: ", e)

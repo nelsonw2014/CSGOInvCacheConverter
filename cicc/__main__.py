@@ -1,11 +1,11 @@
 import ctypes
 import ctypes.wintypes
 import os
-import tkinter as tk
-import tkinter.filedialog as filedialog
-import tkinter.ttk as ttk
-
-from cicc.image import convert_cache_to_image
+import ttk
+import tkFileDialog
+import Tkinter as tk
+from threading import Thread
+from image import convert_cache_to_image
 
 
 class CSGOInvCacheConverterApplet(ttk.Frame):
@@ -86,14 +86,16 @@ class CSGOInvCacheConverterApplet(ttk.Frame):
 
         self.converting_label = ttk.Label(self)
         self.converting_label["text"] = "Converting: "
-        self.converting_label.grid(column=0, row=5,  sticky="e")
+        self.converting_label.grid(column=0, row=5,  sticky="e", pady=10)
 
         self.progress_file_label = ttk.Label(self)
         self.progress_file_label["textvariable"] = self.progress_file
         self.progress_file_label.grid(column=1, row=5, columnspan=3, sticky="nesw")
 
+        self.conversion_thread = None
+
     def get_originating_location(self):
-        new_location = filedialog.askdirectory(
+        new_location = tkFileDialog.askdirectory(
             initialdir=self.orig_loc.get(),
             mustexist=True
         )
@@ -103,7 +105,7 @@ class CSGOInvCacheConverterApplet(ttk.Frame):
             self.orig_loc.set(new_location)
 
     def get_save_location(self):
-        new_location = filedialog.askdirectory(
+        new_location = tkFileDialog.askdirectory(
             initialdir=self.save_loc.get(),
             mustexist=True
         )
@@ -112,27 +114,33 @@ class CSGOInvCacheConverterApplet(ttk.Frame):
             self.save_loc.set(new_location)
 
     def convert(self):
-        self.loading_bar["maximum"] = len(os.listdir(self.orig_loc.get()))
-        self.loading_bar["value"] = 0
-        for image in os.listdir(self.orig_loc.get()):
-            try:
-                convert_cache_to_image(
-                    os.path.join(self.orig_loc.get(), image),
-                    os.path.join(self.save_loc.get(), image.rstrip(".iic") + self.save_ext.get())
-                )
-            except Exception as e:
-                print("Failed to convert:", e)
-            self.loading_bar["value"] += 1
-            self.progress_file.set(image.rstrip(".iic") + self.save_ext.get())
-            self.progress_text.set(str(self.loading_bar["value"]) + " / " + str(self.loading_bar["maximum"]))
-            self.update_idletasks()
-        self.progress_file.set("None")
+        # Trick to make window not become unresponsive
+        def conversion():
+            self.loading_bar["maximum"] = len(os.listdir(self.orig_loc.get()))
+            self.loading_bar["value"] = 0
+            for image in os.listdir(self.orig_loc.get()):
+                self.loading_bar["value"] += 1
+                self.progress_file.set(image.rstrip(".iic") + self.save_ext.get())
+                self.progress_text.set(str(self.loading_bar["value"]) + " / " + str(self.loading_bar["maximum"]))
+                self.update_idletasks()
+                try:
+                    convert_cache_to_image(
+                        os.path.join(self.orig_loc.get(), image),
+                        os.path.join(self.save_loc.get(), image.rstrip(".iic") + self.save_ext.get())
+                    )
+                except Exception as e:
+                    print("Failed to convert:", e)
+            self.progress_file.set("None")
+            self.conversion_thread = None
+
+        self.conversion_thread = Thread(target=conversion)
+        self.conversion_thread.run()
 
 
 if __name__ == "__main__":
     root = tk.Tk()
     root.wm_title("CS:GO Inventory Cache Image Converter")
-    root.iconphoto(True, tk.PhotoImage(file="icon.png"))
+    root.iconbitmap("icon.ico")
     root.resizable(0, 0)
     app = CSGOInvCacheConverterApplet(master=root)
     app.mainloop()
